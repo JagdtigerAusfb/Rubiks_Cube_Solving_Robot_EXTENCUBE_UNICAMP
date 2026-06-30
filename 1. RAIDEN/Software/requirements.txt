@@ -1,0 +1,33 @@
+============================================================
+  REQUIREMENTS — CubeApp  +  Cube3D
+============================================================
+
+------------------------------------------------------------
+  EXTERNAL LIBRARIES (install via pip)
+------------------------------------------------------------
+
+PyQt6               — GUI framework for windows, buttons, layouts and widgets
+opencv-python       — camera capture and image processing (BGR, HSV, LAB color spaces)
+numpy               — array math and color distance calculations
+pyserial            — serial communication with the Arduino over USB
+kociemba            — two-phase Rubik's Cube solver (Kociemba algorithm)
+pygame              — OpenGL window creation and event loop (used in Cube3D)
+PyOpenGL            — Python bindings for OpenGL (3D cube rendering)
+PyOpenGL-accelerate — native extension that speeds up PyOpenGL
+
+------------------------------------------------------------
+  PYTHON STANDARD LIBRARY (already included, no install needed)
+------------------------------------------------------------
+
+json                — reading and writing .json files (cube state, ROIs, colors)
+os                  — file path and directory manipulation
+sys                 — application arguments and exit handling
+time                — delays and elapsed time measurement (e.g. Arduino boot guard)
+logging             — structured event and error logging instead of print()
+re                  — regular expressions for move sequence parsing
+
+------------------------------------------------------------
+  INSTALL EVERYTHING AT ONCE
+------------------------------------------------------------
+
+pip install PyQt6 opencv-python numpy pyserial kociemba pygame PyOpenGL PyOpenGL-accelerate

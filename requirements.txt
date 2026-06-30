@@ -1,7 +1,0 @@
-opencv-python
-PyQt6
-numpy
-kociemba
-pyserial
-pygame
-PyOpenGL
