@@ -1,6 +1,6 @@
 # RAIDEN
 
-This repository contains everything related to the Rubik's Cube solving robot, **Raiden** and its second version: **Tupa**. This project was developed as an extension project at the State University of Campinas (UNICAMP).
+This repository contains everything related to the Rubik's Cube solving robot, **Raiden** and its second version: **Tupã**. This project was developed as an extension project at the State University of Campinas (UNICAMP).
 
 ## Introduction
 
