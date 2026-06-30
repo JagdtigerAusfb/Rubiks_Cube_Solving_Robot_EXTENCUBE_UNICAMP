@@ -1,8 +1,6 @@
 # RAIDEN — Software
 
-**[WORK IN PROGRESS]**
-
-This folder contains all the software for **Raiden**, the Rubik's Cube solving robot: the Arduino firmware that drives the motors, and two separate Python applications used to control the robot from a PC.
+This folder contains all the software for our first Rubik's Cube solving robot: the **Raiden**, the Arduino firmware that drives the motors, and two separate Python applications used to control the robot from a PC.
 
 ## Repository structure
 
@@ -25,7 +23,7 @@ Firmware for the **Arduino Mega**, controlling the 6 A4988 stepper drivers (one 
 As an optimization, opposite faces (e.g. U/D, F/B, L/R) detected as consecutive moves are driven **simultaneously** (`executarDuplo`) instead of sequentially, reducing total solve time. The `.ino` file must be uploaded manually through the Arduino IDE — it is not flashed automatically by the PC software.
 
 ### `Cube3D/`
-A standalone OpenGL/Pygame application that renders an interactive 3D Rubik's Cube on screen and can drive the physical robot over serial.
+A OpenGL/Pygame application that renders an interactive 3D Rubik's Cube on screen and can drive the physical robot over serial. This application was made for demonstration purposes and can be used to directly control the motors using a keyboard.
 
 - `main.py` — window/render loop, keyboard controls for manual face rotations
 - `cube/rubiks_cube.py` — cube data model and 3D rendering of each cubie
@@ -34,8 +32,6 @@ A standalone OpenGL/Pygame application that renders an interactive 3D Rubik's Cu
 - `ui/hud.py`, `ui/settings.py` — on-screen HUD/overlay and a Tkinter settings window for serial port/speed
 - `config.py` — paths, color map, and the Kociemba → robot move-code lookup table
 - `data/cube_state.json` — last saved cube state
-
-This appears to be the earlier/prototype tool, used for visualizing and testing moves before the full GUI was built.
 
 ### `CubeApp/` — main application
 A PyQt6 desktop app that scans the physical cube with a webcam, solves it, and sends the solution to the robot. Pages are stacked in a `QStackedWidget` and flow as:
@@ -87,12 +83,6 @@ Credit: solving logic built on top of the open-source [muodov/kociemba](https://
    ```
    python CubeApp/main.py
    ```
-4. Calibrate the ROI grid and reference colors (first run only), scan the cube, then solve and send the solution to the robot from the cover page.
+5. Calibrate the ROI grid and reference colors (first run only), scan the cube, then solve and send the solution to the robot from the cover page.
 
-`Cube3D/main.py` can be run the same way for the 3D-viewer/manual-control tool, but it expects `data/cube_state.json` to already contain a valid cube state (set externally or via the JSON file).
-
-## Status / notes
-
-- `CubeApp` is the actively developed, full-featured application (camera scanning + two solving methods).
-- `Cube3D` looks like an earlier prototype/visualization tool and may be unmaintained going forward.
-- `__pycache__` folders are compiled artifacts and are not needed to run or understand the code — safe to delete.
+`Cube3D/main.py` can be run the same way for the 3D-viewer/manual-control tool, but it expects `data/cube_state.json` to already contain a valid cube state (set externally or via the JSON file -- The solved cube state is given by: {"cube_string": **"UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"}** ).
