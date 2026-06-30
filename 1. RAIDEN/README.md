@@ -2,7 +2,7 @@
 
 **[WORK IN PROGRESS]**
 
-Repository with all the hardware material for **Raiden**, a Rubik's Cube solving robot developed as an extension project at UNICAMP. The goal is to solve the cube using 6 stepper motors (one per face), color sensors to read the cube's state, and an Arduino Mega as the central controller.
+This folder contains all the hardware material for **Raiden**, a Rubik's Cube solving robot developed as an extension project at UNICAMP. The goal is to solve the cube using 6 stepper motors (one per face), color sensors to read the cube's state, and an Arduino Mega as the central controller.
 
 ## Repository structure
 
