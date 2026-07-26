@@ -17,7 +17,9 @@ Shield for the **Arduino Mega**, responsible for all the power delivery and sens
 The folder includes the complete KiCad project (schematic, PCB, custom footprints), fabrication files (Gerber, drill, BOM, component positions in `production/`), and the board's 3D model (`.step`).
 
 ### `PCB 3 Drivers/`
-A simpler board with only **3 A4988 drivers**, made before the definitive board (Drivers + Sensores) to replace breadboards and reduce excessive wiring.
+A simpler board with only **3 A4988 drivers**, made before the definitive board (Drivers + Sensores) to replace breadboards and reduce wiring.
+
+As this board does not have a fixed pin layout, remember to change the respetive pins to the ones you are using in Arduino IDE.
 
 ## Reference pinout (Drivers + Sensores board)
 
