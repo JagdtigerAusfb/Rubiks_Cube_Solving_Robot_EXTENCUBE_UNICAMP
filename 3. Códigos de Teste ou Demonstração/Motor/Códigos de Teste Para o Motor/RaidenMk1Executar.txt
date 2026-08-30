@@ -1,0 +1,352 @@
+
+/* Autores: Pedro Ortolan, Guilherme Ramalho, Paulo Sérgio */
+
+/*Feito como parte do projeto de extensão Extencube para montagem de um robô solucionador de cubo mágico*/
+
+/*
+
+Esse código recebe uma string contendo a série de movimentos que devem ser realizados pelos motores para solucionar
+o cubo mágico. A notação da string segue a lógica:
+
+MOTOR 1 - Up    -> U
+MOTOR 2 - Front -> F 
+MOTOR 3 - Right -> R
+MOTOR 4 - Back  -> B
+MOTOR 5 - Left  -> L
+MOTOR 6 - Down  -> D
+
+Com a face frontal sendo a verde e a superior sendo a branca.
+
+X -> Rotação Anti-Horária de 90 graus
+X' -> Rotação Horária de 90 graus
+X2 -> Rotação Anti-Horária de 180 graus
+
+Com x = {U, F, R, B, L, D}.
+
+O código é divido em 6 blocos: Definições, Set Up, Verificação de opostos, Um motor, Dois motores e Executar.
+
+Em definições, temos apenas a definição de todos os pinos usados no código. Para cada motor, temos um pino de Direção e um de Step. 
+Além disso, temos o pino global de ENABLE dos drivers.
+
+No Set Up, temos apenas a definição de todos os pinos como saída. Além disso, usamos o LED interno do Arduino apenas para
+mostrar quando os motores estão girando.
+
+Em Verficação de Opostos, o código recebe o movimento atual e o próximo. Primeiro, ele extrai apenas o movimento (remove o ' 
+ou o 2) para saber se os movimentos são em faces opostas do cubo (F e B, U e D, R e L) e assim podem ser feitos ao mesmo tempo.
+A função retorna então verdadeiro ou falso. Isso define se a função um motor ou dois motores será chamada.
+
+Em um motor (girarmotor) o código define atravez do bloco de ifs qual os paramêtros do comando a ser executado e então
+executa o comando ao primeiro escrever no pino de Direção alto ou baixo para definir a direção. Então, escreve alto ao pino de STEP, espera 
+a bobina ser totalmente energizada, desliga o pino e espera a bobina ser totalmente desenergizada. Note que ele também checa se o comando
+é válido, se não for não faz nada.
+
+Em dois motors (girarDoisMotores) o código faz a mesma coisa que em um motor, mas para dois motores. Novamente, os comandos atuais e 
+próximos são lidos e os paramêtros dos dois motores são definidos em função deles. Então, o código acha o maior numéro de passos necessários
+(50 para 90 graus ou 100 para 180 graus) e executa os motores de acordo.
+
+Em Executar (RaidenMk1Executar), a função recebe a string a ser executada e seu tamanho como argumentos.  Primeiro, a função cria
+o índice de onde estamos na string e liga o ENABLE dos drivers (ativo em baixo). O while percorre então todos os elementos da string
+checando primeiro se não estamos no último elemento (se for o último, não tem como otimizar), se não for o último, chama a função
+de checar se são opostos para saber qual função do motor chamar e move o ínidice de acordo.
+
+PARA RODAR: defina a sua string e calcule ou apenas coloque o tamanho dela, chame a função com os parametros sendo sua string
+e o tamanho dela. Deve-se calcular o tamanho da string no mesmo escopo em que ela esta, então não é possivel fazer isso dentro 
+da função. Isso é problema do "sizeof". 
+
+Outras considerações:
+
+No driver A4988:
+-> Pino de sleep ativado em high por default, pino reset floating --> ligar o sleep no floating (testar isso se não der certo)
+-> pinos de microsteep tem resistor de pull down e deixar sem nada resulta em full step
+-> Low - Horário, High - Anti horario
+
+-> Desligar o ENABLE é necessário para o motor não esquentar quando não está em movimento. As bobinas permancem energizadas
+para manter o eixo fixo, caso o enable fique sempre ligado, esquentando o motor.
+*/
+
+//******************BLOCO 1 - DEFINIÇÕES**************************//
+//declaração dos pinos
+int DIR_PIN_1 = 2; 
+int STEP_PIN_1 = 3; 
+
+int DIR_PIN_2 = 4; 
+int STEP_PIN_2 = 5; 
+
+int DIR_PIN_3 = 6; 
+int STEP_PIN_3 = 7; 
+
+int DIR_PIN_4 = 8; 
+int STEP_PIN_4 = 9; 
+
+int DIR_PIN_5 = 10; 
+int STEP_PIN_5 = 11; 
+
+int DIR_PIN_6 = 12; 
+int STEP_PIN_6 = 13; 
+
+int ENABLE_PIN = 21;
+//***************************************************************//
+
+
+//*********************BLOCO 2 - SET UP**************************//
+void setup() {
+
+  //Seta pins como output
+  
+  pinMode(DIR_PIN_1, OUTPUT);
+  pinMode(STEP_PIN_1, OUTPUT);
+  
+  pinMode(DIR_PIN_2, OUTPUT);
+  pinMode(STEP_PIN_2, OUTPUT);
+  
+  pinMode(DIR_PIN_3, OUTPUT);
+  pinMode(STEP_PIN_3, OUTPUT);
+
+  pinMode(DIR_PIN_4, OUTPUT);
+  pinMode(STEP_PIN_4, OUTPUT);
+
+  pinMode(DIR_PIN_5, OUTPUT);
+  pinMode(STEP_PIN_5, OUTPUT);
+
+  pinMode(DIR_PIN_6, OUTPUT);
+  pinMode(STEP_PIN_6, OUTPUT);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(ENABLE_PIN, OUTPUT);
+
+}
+
+
+//****************BLOCO 3 - GIRAR UM MOTOR**********************************//
+// Função roda apenas um motor
+void girarmotor(String motor){
+
+    // 1. Define variáveis locais
+    int dirPin, stepPin, dir, passos;
+    bool moveValido = true;
+
+    // 2. Bloco IF para definir os parâmetros
+    if (motor == "U")       { dirPin = DIR_PIN_1; stepPin = STEP_PIN_1; dir = LOW; passos = 50; }
+    else if (motor == "U'") { dirPin = DIR_PIN_1; stepPin = STEP_PIN_1; dir = HIGH; passos = 50; }
+    else if (motor == "U2") { dirPin = DIR_PIN_1; stepPin = STEP_PIN_1; dir = LOW; passos = 100; }
+
+    else if (motor == "F")  { dirPin = DIR_PIN_2; stepPin = STEP_PIN_2; dir = LOW; passos = 50; }
+    else if (motor == "F'") { dirPin = DIR_PIN_2; stepPin = STEP_PIN_2; dir = HIGH; passos = 50; }
+    else if (motor == "F2") { dirPin = DIR_PIN_2; stepPin = STEP_PIN_2; dir = LOW; passos = 100; }
+
+    else if (motor == "R")  { dirPin = DIR_PIN_3; stepPin = STEP_PIN_3; dir = LOW; passos = 50; }
+    else if (motor == "R'") { dirPin = DIR_PIN_3; stepPin = STEP_PIN_3; dir = HIGH; passos = 50; }
+    else if (motor == "R2") { dirPin = DIR_PIN_3; stepPin = STEP_PIN_3; dir = LOW; passos = 100; }
+
+    else if (motor == "B")  { dirPin = DIR_PIN_4; stepPin = STEP_PIN_4; dir = LOW; passos = 50; }
+    else if (motor == "B'") { dirPin = DIR_PIN_4; stepPin = STEP_PIN_4; dir = HIGH; passos = 50; }
+    else if (motor == "B2") { dirPin = DIR_PIN_4; stepPin = STEP_PIN_4; dir = LOW; passos = 100; }
+
+    else if (motor == "L")  { dirPin = DIR_PIN_5; stepPin = STEP_PIN_5; dir = LOW; passos = 50; }
+    else if (motor == "L'") { dirPin = DIR_PIN_5; stepPin = STEP_PIN_5; dir = HIGH; passos = 50; }
+    else if (motor == "L2") { dirPin = DIR_PIN_5; stepPin = STEP_PIN_5; dir = LOW; passos = 100; }
+
+    else if (motor == "D")  { dirPin = DIR_PIN_6; stepPin = STEP_PIN_6; dir = LOW; passos = 50; }
+    else if (motor == "D'") { dirPin = DIR_PIN_6; stepPin = STEP_PIN_6; dir = HIGH; passos = 50; }
+    else if (motor == "D2") { dirPin = DIR_PIN_6; stepPin = STEP_PIN_6; dir = LOW; passos = 100; }
+
+    else { moveValido = false; } // Comando inválido
+
+    // 3. Bloco de Execução (só executa se o comando for válido)
+    if (moveValido) {
+      digitalWrite (dirPin, dir); 
+
+      for (int i = 0; i < passos; i++) 
+      {
+      digitalWrite(stepPin, HIGH); 
+      digitalWrite(LED_BUILTIN, HIGH);
+      delayMicroseconds(1000);          
+      digitalWrite(stepPin, LOW); 
+      digitalWrite(LED_BUILTIN, LOW);
+      delayMicroseconds(1000);          
+      }
+    }
+}
+//***************************************************************//
+
+
+//*****BLOCO 4 - VERIFICA OPOSTOS*************************************//
+// Verifica se são opostos
+bool saoOpostos(String m1, String m2) {
+
+  // Recebe os comandos nas variáveis locais
+  char face1 = ' ';
+  char face2 = ' ';
+
+  // Usando a função charAt, extraimos o apenas o lado do cubo (R2 -> R, R' -> R, etc) 
+  // Apenas se o tamanho for maior que zero, se não daria bastante erro e travaria (problema do charAt)
+  if (m1.length() > 0) { face1 = m1.charAt(0); }
+  if (m2.length() > 0) { face2 = m2.charAt(0); }
+
+  // Se um for uma string vazia -> comando ínválido (feito por segurança)
+  if (face1 == ' ' || face2 == ' ') { return false; }
+
+  if ((face1 == 'U' && face2 == 'D') || (face1 == 'D' && face2 == 'U')) { return true; }
+  if ((face1 == 'F' && face2 == 'B') || (face1 == 'B' && face2 == 'F')) { return true; } 
+  if ((face1 == 'R' && face2 == 'L') || (face1 == 'L' && face2 == 'R')) { return true; }
+  
+  return false;
+}
+//***************************************************************//
+
+
+//**************************BLOCO 5 - GIRA DOIS MOTORES*************************************//
+// Gira dois motores simultaneamente
+void girarDoisMotores(String motor1, String motor2) {
+  
+  // Parâmetros para Motor 1
+  int dirPin1, stepPin1, dir1, passos1;
+  // Parâmetros para Motor 2
+  int dirPin2, stepPin2, dir2, passos2;
+  
+  bool move1Valido = true;
+  bool move2Valido = true;
+
+  // --- Bloco IF para Motor 1 ---
+  if (motor1 == "U")       { dirPin1 = DIR_PIN_1; stepPin1 = STEP_PIN_1; dir1 = LOW; passos1 = 50; }
+  else if (motor1 == "U'") { dirPin1 = DIR_PIN_1; stepPin1 = STEP_PIN_1; dir1 = HIGH; passos1 = 50; }
+  else if (motor1 == "U2") { dirPin1 = DIR_PIN_1; stepPin1 = STEP_PIN_1; dir1 = LOW; passos1 = 100; }
+  
+  else if (motor1 == "F")  { dirPin1 = DIR_PIN_2; stepPin1 = STEP_PIN_2; dir1 = LOW; passos1 = 50; }
+  else if (motor1 == "F'") { dirPin1 = DIR_PIN_2; stepPin1 = STEP_PIN_2; dir1 = HIGH; passos1 = 50; }
+  else if (motor1 == "F2") { dirPin1 = DIR_PIN_2; stepPin1 = STEP_PIN_2; dir1 = LOW; passos1 = 100; }
+  
+  else if (motor1 == "R")  { dirPin1 = DIR_PIN_3; stepPin1 = STEP_PIN_3; dir1 = LOW; passos1 = 50; }
+  else if (motor1 == "R'") { dirPin1 = DIR_PIN_3; stepPin1 = STEP_PIN_3; dir1 = HIGH; passos1 = 50; }
+  else if (motor1 == "R2") { dirPin1 = DIR_PIN_3; stepPin1 = STEP_PIN_3; dir1 = LOW; passos1 = 100; }
+  
+  else if (motor1 == "B")  { dirPin1 = DIR_PIN_4; stepPin1 = STEP_PIN_4; dir1 = LOW; passos1 = 50; }
+  else if (motor1 == "B'") { dirPin1 = DIR_PIN_4; stepPin1 = STEP_PIN_4; dir1 = HIGH; passos1 = 50; }
+  else if (motor1 == "B2") { dirPin1 = DIR_PIN_4; stepPin1 = STEP_PIN_4; dir1 = LOW; passos1 = 100; }
+  
+  else if (motor1 == "L")  { dirPin1 = DIR_PIN_5; stepPin1 = STEP_PIN_5; dir1 = LOW; passos1 = 50; }
+  else if (motor1 == "L'") { dirPin1 = DIR_PIN_5; stepPin1 = STEP_PIN_5; dir1 = HIGH; passos1 = 50; }
+  else if (motor1 == "L2") { dirPin1 = DIR_PIN_5; stepPin1 = STEP_PIN_5; dir1 = LOW; passos1 = 100; }
+  
+  else if (motor1 == "D")  { dirPin1 = DIR_PIN_6; stepPin1 = STEP_PIN_6; dir1 = LOW; passos1 = 50; }
+  else if (motor1 == "D'") { dirPin1 = DIR_PIN_6; stepPin1 = STEP_PIN_6; dir1 = HIGH; passos1 = 50; }
+  else if (motor1 == "D2") { dirPin1 = DIR_PIN_6; stepPin1 = STEP_PIN_6; dir1 = LOW; passos1 = 100; }
+  
+  else { move1Valido = false; } // Motor 1 inválido
+
+  // --- Bloco IF para Motor 2 ---
+  if (motor2 == "U")       { dirPin2 = DIR_PIN_1; stepPin2 = STEP_PIN_1; dir2 = LOW; passos2 = 50; }
+  else if (motor2 == "U'") { dirPin2 = DIR_PIN_1; stepPin2 = STEP_PIN_1; dir2 = HIGH; passos2 = 50; }
+  else if (motor2 == "U2") { dirPin2 = DIR_PIN_1; stepPin2 = STEP_PIN_1; dir2 = LOW; passos2 = 100; }
+  
+  else if (motor2 == "F")  { dirPin2 = DIR_PIN_2; stepPin2 = STEP_PIN_2; dir2 = LOW; passos2 = 50; }
+  else if (motor2 == "F'") { dirPin2 = DIR_PIN_2; stepPin2 = STEP_PIN_2; dir2 = HIGH; passos2 = 50; }
+  else if (motor2 == "F2") { dirPin2 = DIR_PIN_2; stepPin2 = STEP_PIN_2; dir2 = LOW; passos2 = 100; }
+  
+  else if (motor2 == "R")  { dirPin2 = DIR_PIN_3; stepPin2 = STEP_PIN_3; dir2 = LOW; passos2 = 50; }
+  else if (motor2 == "R'") { dirPin2 = DIR_PIN_3; stepPin2 = STEP_PIN_3; dir2 = HIGH; passos2 = 50; }
+  else if (motor2 == "R2") { dirPin2 = DIR_PIN_3; stepPin2 = STEP_PIN_3; dir2 = LOW; passos2 = 100; }
+  
+  else if (motor2 == "B")  { dirPin2 = DIR_PIN_4; stepPin2 = STEP_PIN_4; dir2 = LOW; passos2 = 50; }
+  else if (motor2 == "B'") { dirPin2 = DIR_PIN_4; stepPin2 = STEP_PIN_4; dir2 = HIGH; passos2 = 50; }
+  else if (motor2 == "B2") { dirPin2 = DIR_PIN_4; stepPin2 = STEP_PIN_4; dir2 = LOW; passos2 = 100; }
+  
+  else if (motor2 == "L")  { dirPin2 = DIR_PIN_5; stepPin2 = STEP_PIN_5; dir2 = LOW; passos2 = 50; }
+  else if (motor2 == "L'") { dirPin2 = DIR_PIN_5; stepPin2 = STEP_PIN_5; dir2 = HIGH; passos2 = 50; }
+  else if (motor2 == "L2") { dirPin2 = DIR_PIN_5; stepPin2 = STEP_PIN_5; dir2 = LOW; passos2 = 100; }
+  
+  else if (motor2 == "D")  { dirPin2 = DIR_PIN_6; stepPin2 = STEP_PIN_6; dir2 = LOW; passos2 = 50; }
+  else if (motor2 == "D'") { dirPin2 = DIR_PIN_6; stepPin2 = STEP_PIN_6; dir2 = HIGH; passos2 = 50; }
+  else if (motor2 == "D2") { dirPin2 = DIR_PIN_6; stepPin2 = STEP_PIN_6; dir2 = LOW; passos2 = 100; }
+  
+  else { move2Valido = false; } // Motor 2 inválido
+
+  
+  if (!move1Valido || !move2Valido) return; // Não faz nada se um dos comandos for inválido
+  
+  // Seta a direção de ambos
+  digitalWrite(dirPin1, dir1);
+  digitalWrite(dirPin2, dir2);
+
+  // Pega o maior número de passos (caso um seja 90 e o outro 180)
+  int maxPassos = max(passos1, passos2); 
+
+  for (int i = 0; i < maxPassos; i++) {
+    
+    // Pulsa motor 1 (HIGH) se ele ainda tiver passos
+    if (i < passos1) { digitalWrite(stepPin1, HIGH); }
+    // Pulsa motor 2 (HIGH) se ele ainda tiver passos
+    if (i < passos2) { digitalWrite(stepPin2, HIGH); }
+    
+    digitalWrite(LED_BUILTIN, HIGH);
+    delayMicroseconds(1000); // Delay para ambos
+
+    // Pulsa motor 1 (LOW)
+    if (i < passos1) { digitalWrite(stepPin1, LOW); }
+    // Pulsa motor 2 (LOW)
+    if (i < passos2) { digitalWrite(stepPin2, LOW); }
+    
+    digitalWrite(LED_BUILTIN, LOW);
+    delayMicroseconds(1000); // Delay para ambos
+  }
+}
+//***************************************************************//
+
+
+//************************BLOCO 6 - CHAMA AS FUNÇÕES***************************************//
+void RaidenMk1Executar(String algoritmo[], int numMovimentos) {
+  
+  int i_movimento = 0; // Usa um índice local
+  digitalWrite(ENABLE_PIN, LOW); // Liga os drivers 
+  
+  // Roda ENQUANTO o índice for menor que o número total de movimentos
+  while (i_movimento < numMovimentos) {
+    
+    // 1. Tenta olhar para frente (i + 1)
+    // Compara o atual com o menor menos um, 
+    // Se for o último vai ser igual, e não menor
+    if (i_movimento < numMovimentos - 1) {
+
+      // Recebe o movimento atual e o próximo
+      String moveAtual = algoritmo[i_movimento];
+      String proximoMove = algoritmo[i_movimento + 1];
+
+      /* 2. "IF" DE OTIMIZAÇÃO
+       Checa se os comandos são em lados opostos,
+       chama então a respectiva função */
+      if (saoOpostos(moveAtual, proximoMove)) {
+
+        girarDoisMotores(moveAtual, proximoMove);
+        i_movimento += 2; // Pula os dois
+      } 
+
+      else {
+
+        girarmotor(moveAtual);
+        i_movimento++; // Avança só um
+      }
+    } 
+
+    // 3. É o último movimento da lista (não pode olhar para frente)
+    else { 
+      girarmotor(algoritmo[i_movimento]);
+      i_movimento++; // Avança para terminar
+    }
+
+    digitalWrite(ENABLE_PIN, HIGH); // Desliga os drivers entre execuções 
+    // MUDE ESSE VALOR PARA ALTERAR O TEMPO ENTRE EXECUÇÕES (elementos do array)
+    delay(1000); 
+  }
+  
+}
+//***************************************************************//
+
+
+void loop() {
+
+  String minhaSTRINGsuperBACANA[] = { "F2", "B", "U", "F", "B"};       // Define a String
+  int numMoves = sizeof(minhaSTRINGsuperBACANA) / sizeof(minhaSTRINGsuperBACANA[0]); // Isso calcula o tamanho
+
+  RaidenMk1Executar(minhaSTRINGsuperBACANA, numMoves);                 // EXECUTA
+    
+}

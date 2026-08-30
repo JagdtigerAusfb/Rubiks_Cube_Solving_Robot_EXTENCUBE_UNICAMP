@@ -1,0 +1,337 @@
+#ifndef MOTOR_H
+#define MOTOR_H
+
+// ================================
+//        DEFINIÇÃO DOS PINOS
+// ================================
+
+// Pinos de Direção e Passo
+#define DIR_PIN_1 31
+#define STEP_PIN_1 30
+#define DIR_PIN_2 35
+#define STEP_PIN_2 34
+#define DIR_PIN_3 A12
+#define STEP_PIN_3 A13
+#define DIR_PIN_4 A6
+#define STEP_PIN_4 A7
+#define DIR_PIN_5 A0
+#define STEP_PIN_5 A1
+#define DIR_PIN_6 43
+#define STEP_PIN_6 42
+
+// Pinos de Enable Individuais
+#define ENABLE_PIN_1 14
+#define ENABLE_PIN_2 16
+#define ENABLE_PIN_3 49
+#define ENABLE_PIN_4 48
+#define ENABLE_PIN_5 A3
+#define ENABLE_PIN_6 19
+
+// ================================
+//       VARIÁVEIS GLOBAIS
+// ================================
+
+// Sequência de movimentos (String única)
+/*String sequencia = 
+"GPHALEMCQIKBNFRDJHOAREJGNCPDLIMBQFKHOGRALDNCPEKIMBQFJHOAPELGMCRDKHNBQFJIOGPAKENCRDLIMBOFJHQAPD"
+"LGNCREKIMBQFJHOARELGNCPDKIMBQFJHOARDLGNCPEKIMBQFJHOGPALDNCREKIMBQFJHOAPELGMCRDKINBQFJHOGRALENC"
+"PDKIMBQFJHOARDLGNCPEKIMBQFJHOAPELGNCRDKIMBQFJHOGPALENCRDKIMBQFJHOARELGNCPDKIMBQHJFOGRALDNCPEKI"
+"MGPHALEMCQIKBNFRDJHOAREJGNCPDLIMBQFKHOGRALDNCPEKIMBQFJHOAPELGMCRDKHNBQFJIOGPAKENCRDLIMBOFJHQAP"
+"DLGNCREKIMBQFJHOARELGNCPDKIMBQHJFOGPALENCRDKIMBQFJHOARDLGNCPEKIMBQFJHOGPALDNCREKIMBQFJHOAPELGM"
+"CRDKINBQFJHOGRALENCPDKIMBQFJHOARDLGNCPEKIMBQFJHOAPELGNCRDKIMBQFJHOGPALENCRDKIMBQFJHOARELGNCPDK"
+"IMBQHJFOGRALDNCPEKIMGPHALEMCQIKBNFRDJHOAREJGNCPDLIMBQFKHOGRALDNCPEKIMBQFJHOAPELGMCRDKHNBQFJIOG"
+"PAKENCRDLIMBOFJHQAPDLGNCREKIMBQFJHOARELGNCPDKIMBQHJFOGPALENCRDKIMBQFJHOARDLGNCPEKIMBQFJHOGPALD"
+"NCREKIMBQFJHOAPELGMCRDKINBQFJHOGRALENCPDKIMBQFJHOARDLGNCPEKIMBQFJHOAPELGNCRDKIMBQFJHOGPALENCRD"
+"KIMBQFJHOARELGNCPDKIMBQHJFOGRALDNCPEKIMGPHALEMCQIKBNFRDJHOAREJGNCPDLIMBQFKHOGRALDNCPEKIMBQFJHO"
+"APELGMCRDKHNBQFJIOGPAKENCRDLIMBOFJHQAPDLGNCREKIMBQFJHOARELGNCPDKIMBQHJFOGPALENCRDKIMBQFJHOARDL"
+"GNCPEKIMBQFJHOGPALDNCREKIMBQFJHOAPELGMCRDKINBQFJHOGRALENCPDKIMBQFJHOARDLGNCPEKIMBQFJHOAPELGNCR"
+"DKIMBQFJHOGPALENCRDKIMBQFJHOARELGNCPDKIMBQHJFOGRALDNCPEKIM"
+;
+*/
+
+String sequencia = "LIADJOPAMBIRKOCIFCI";
+
+int indice = 0;
+bool start = false;
+unsigned long tempoInicio = 0;
+unsigned long tempoTotalPausado = 0;
+
+// Configuração de velocidade
+const int DELAY_STEP = 850; // Microsegundos entre passos
+
+// ================================
+//     HELPER: CONFIGURA MOTOR
+// ================================
+// Esta função preenche as variáveis por referência para evitar repetição de código
+bool configurarMotor(char motor, int &dirPin, int &stepPin, int &enablePin, int &dir, int &passos) {
+    
+    // --- MOTOR 1 (A, B, C) - UP ---
+    if (motor == 'A')      { dirPin = DIR_PIN_1; stepPin = STEP_PIN_1; enablePin = ENABLE_PIN_1; dir = LOW;  passos = 50; }
+    else if (motor == 'B') { dirPin = DIR_PIN_1; stepPin = STEP_PIN_1; enablePin = ENABLE_PIN_1; dir = HIGH; passos = 50; }
+    else if (motor == 'C') { dirPin = DIR_PIN_1; stepPin = STEP_PIN_1; enablePin = ENABLE_PIN_1; dir = LOW;  passos = 100; }
+    
+    // --- MOTOR 2 (D, E, F) - RIGHT ---
+    else if (motor == 'D') { dirPin = DIR_PIN_2; stepPin = STEP_PIN_2; enablePin = ENABLE_PIN_2; dir = LOW;  passos = 50; }
+    else if (motor == 'E') { dirPin = DIR_PIN_2; stepPin = STEP_PIN_2; enablePin = ENABLE_PIN_2; dir = HIGH; passos = 50; }
+    else if (motor == 'F') { dirPin = DIR_PIN_2; stepPin = STEP_PIN_2; enablePin = ENABLE_PIN_2; dir = LOW;  passos = 100; }
+    
+    // --- MOTOR 3 (G, H, I) - FRONT ---
+    else if (motor == 'G') { dirPin = DIR_PIN_3; stepPin = STEP_PIN_3; enablePin = ENABLE_PIN_3; dir = LOW;  passos = 50; }
+    else if (motor == 'H') { dirPin = DIR_PIN_3; stepPin = STEP_PIN_3; enablePin = ENABLE_PIN_3; dir = HIGH; passos = 50; }
+    else if (motor == 'I') { dirPin = DIR_PIN_3; stepPin = STEP_PIN_3; enablePin = ENABLE_PIN_3; dir = LOW;  passos = 100; }
+    
+    // --- MOTOR 4 (J, K, L) - DOWN ---
+    else if (motor == 'J') { dirPin = DIR_PIN_4; stepPin = STEP_PIN_4; enablePin = ENABLE_PIN_4; dir = LOW;  passos = 50; }
+    else if (motor == 'K') { dirPin = DIR_PIN_4; stepPin = STEP_PIN_4; enablePin = ENABLE_PIN_4; dir = HIGH; passos = 50; }
+    else if (motor == 'L') { dirPin = DIR_PIN_4; stepPin = STEP_PIN_4; enablePin = ENABLE_PIN_4; dir = LOW;  passos = 100; }
+    
+    // --- MOTOR 5 (M, N, O) - LEFT ---
+    else if (motor == 'M') { dirPin = DIR_PIN_5; stepPin = STEP_PIN_5; enablePin = ENABLE_PIN_5; dir = LOW;  passos = 50; }
+    else if (motor == 'N') { dirPin = DIR_PIN_5; stepPin = STEP_PIN_5; enablePin = ENABLE_PIN_5; dir = HIGH; passos = 50; }
+    else if (motor == 'O') { dirPin = DIR_PIN_5; stepPin = STEP_PIN_5; enablePin = ENABLE_PIN_5; dir = LOW;  passos = 100; }
+    
+    // --- MOTOR 6 (P, Q, R) - BACK ---
+    else if (motor == 'P') { dirPin = DIR_PIN_6; stepPin = STEP_PIN_6; enablePin = ENABLE_PIN_6; dir = LOW;  passos = 50; }
+    else if (motor == 'Q') { dirPin = DIR_PIN_6; stepPin = STEP_PIN_6; enablePin = ENABLE_PIN_6; dir = HIGH; passos = 50; }
+    else if (motor == 'R') { dirPin = DIR_PIN_6; stepPin = STEP_PIN_6; enablePin = ENABLE_PIN_6; dir = LOW;  passos = 100; }
+    
+    else { return false; } // Comando inválido
+
+    return true;
+}
+
+// ================================
+//      VERIFICAR OPOSTOS
+// ================================
+bool saoOpostos(char face1, char face2) {
+    // Define os grupos de faces
+    bool f1_is_U = (face1 == 'A' || face1 == 'B' || face1 == 'C');
+    bool f1_is_D = (face1 == 'J' || face1 == 'K' || face1 == 'L');
+    
+    bool f1_is_F = (face1 == 'G' || face1 == 'H' || face1 == 'I');
+    bool f1_is_B = (face1 == 'P' || face1 == 'Q' || face1 == 'R');
+    
+    bool f1_is_R = (face1 == 'D' || face1 == 'E' || face1 == 'F');
+    bool f1_is_L = (face1 == 'M' || face1 == 'N' || face1 == 'O');
+    
+    bool f2_is_U = (face2 == 'A' || face2 == 'B' || face2 == 'C');
+    bool f2_is_D = (face2 == 'J' || face2 == 'K' || face2 == 'L');
+    
+    bool f2_is_F = (face2 == 'G' || face2 == 'H' || face2 == 'I');
+    bool f2_is_B = (face2 == 'P' || face2 == 'Q' || face2 == 'R');
+    
+    bool f2_is_R = (face2 == 'D' || face2 == 'E' || face2 == 'F');
+    bool f2_is_L = (face2 == 'M' || face2 == 'N' || face2 == 'O');
+
+    // Checa os pares opostos
+    if ((f1_is_U && f2_is_D) || (f1_is_D && f2_is_U)) { return true; }
+    if ((f1_is_F && f2_is_B) || (f1_is_B && f2_is_F)) { return true; } 
+    if ((f1_is_R && f2_is_L) || (f1_is_L && f2_is_R)) { return true; }
+    
+    return false;
+}
+
+// ================================
+//      EXECUÇÃO SINGLE
+// ================================
+void RaidenExecutarSimples(char motor){
+    int dirPin, stepPin, enablePin, dir, passos;
+    
+    if (configurarMotor(motor, dirPin, stepPin, enablePin, dir, passos)) {
+        digitalWrite(enablePin, LOW); // Ativa driver
+        digitalWrite(dirPin, dir);
+
+        for (int i = 0; i < passos; i++) {
+            digitalWrite(stepPin, HIGH);
+            digitalWrite(LED_BUILTIN, HIGH);
+            delayMicroseconds(DELAY_STEP);
+            digitalWrite(stepPin, LOW);
+            digitalWrite(LED_BUILTIN, LOW);
+            delayMicroseconds(DELAY_STEP);
+        }
+        digitalWrite(enablePin, HIGH); // Desativa driver
+    }
+}
+
+// ================================
+//      EXECUÇÃO DUPLA (OTIMIZADA)
+// ================================
+void RaidenExecutarDuplo(char motor1, char motor2) {
+    int dirPin1, stepPin1, enablePin1, dir1, passos1;
+    int dirPin2, stepPin2, enablePin2, dir2, passos2;
+
+    bool m1Ok = configurarMotor(motor1, dirPin1, stepPin1, enablePin1, dir1, passos1);
+    bool m2Ok = configurarMotor(motor2, dirPin2, stepPin2, enablePin2, dir2, passos2);
+
+    if (m1Ok && m2Ok) {
+        // Ativa ambos os drivers
+        digitalWrite(enablePin1, LOW);
+        digitalWrite(enablePin2, LOW);
+
+        // Define direções
+        digitalWrite(dirPin1, dir1);
+        digitalWrite(dirPin2, dir2);
+
+        int maxPassos = max(passos1, passos2);
+
+        for (int i = 0; i < maxPassos; i++) {
+            // Pulsa motor 1 se necessário
+            if (i < passos1) digitalWrite(stepPin1, HIGH);
+            // Pulsa motor 2 se necessário
+            if (i < passos2) digitalWrite(stepPin2, HIGH);
+            
+            digitalWrite(LED_BUILTIN, HIGH);
+            delayMicroseconds(DELAY_STEP);
+
+            // Desliga pulso motor 1
+            if (i < passos1) digitalWrite(stepPin1, LOW);
+            // Desliga pulso motor 2
+            if (i < passos2) digitalWrite(stepPin2, LOW);
+
+            digitalWrite(LED_BUILTIN, LOW);
+            delayMicroseconds(DELAY_STEP);
+        }
+
+        // Desativa ambos os drivers
+        digitalWrite(enablePin1, HIGH);
+        digitalWrite(enablePin2, HIGH);
+    }
+}
+
+// ================================
+//             SETUP
+// ================================
+void setup(){
+    Serial.begin(9600);
+
+    // Configura os Pinos de Enable
+    pinMode(ENABLE_PIN_1, OUTPUT); digitalWrite(ENABLE_PIN_1, HIGH);
+    pinMode(ENABLE_PIN_2, OUTPUT); digitalWrite(ENABLE_PIN_2, HIGH);
+    pinMode(ENABLE_PIN_3, OUTPUT); digitalWrite(ENABLE_PIN_3, HIGH);
+    pinMode(ENABLE_PIN_4, OUTPUT); digitalWrite(ENABLE_PIN_4, HIGH);
+    pinMode(ENABLE_PIN_5, OUTPUT); digitalWrite(ENABLE_PIN_5, HIGH);
+    pinMode(ENABLE_PIN_6, OUTPUT); digitalWrite(ENABLE_PIN_6, HIGH);
+
+    // Configura Pinos de Passo e Direção
+    pinMode(DIR_PIN_1, OUTPUT); pinMode(STEP_PIN_1, OUTPUT);
+    pinMode(DIR_PIN_2, OUTPUT); pinMode(STEP_PIN_2, OUTPUT);
+    pinMode(DIR_PIN_3, OUTPUT); pinMode(STEP_PIN_3, OUTPUT);
+    pinMode(DIR_PIN_4, OUTPUT); pinMode(STEP_PIN_4, OUTPUT);
+    pinMode(DIR_PIN_5, OUTPUT); pinMode(STEP_PIN_5, OUTPUT);
+    pinMode(DIR_PIN_6, OUTPUT); pinMode(STEP_PIN_6, OUTPUT);
+
+    pinMode(LED_BUILTIN, OUTPUT);
+
+    Serial.println(">>> SISTEMA OTIMIZADO (DUAL MOVE) PRONTO <<<");
+    Serial.println("Envie qualquer coisa para INICIAR.");
+}
+
+// ================================
+//             LOOP
+// ================================
+void loop() {
+
+    // 1. ESTADO DE ESPERA (START)
+    if (!start) {
+        if (Serial.available() > 0) {
+            while(Serial.available() > 0) Serial.read(); // Limpa buffer
+            
+            Serial.println("--- INICIANDO SEQUENCIA ---");
+            Serial.println("(Envie 'P' a qualquer momento para PAUSAR)");
+            
+            start = true;
+            tempoInicio = millis();
+            tempoTotalPausado = 0;
+            indice = 0;
+            delay(500);
+        } else {
+            return;
+        }
+    }
+
+    // 2. VERIFICAÇÃO DE PAUSA
+    if (Serial.available() > 0) {
+        char comando = Serial.read();
+        if (comando == 'P' || comando == 'p') {
+            Serial.println("\n!!! SISTEMA PAUSADO !!!");
+            Serial.println("Envie qualquer caractere para CONTINUAR...");
+            unsigned long inicioPausa = millis();
+            while (Serial.available() == 0) { delay(100); }
+            while(Serial.available() > 0) Serial.read();
+            tempoTotalPausado += (millis() - inicioPausa);
+            Serial.println("... RETOMANDO EXECUCAO ...\n");
+        }
+    }
+
+    // 3. EXECUÇÃO DA SEQUÊNCIA
+    if (indice < sequencia.length()) {
+        
+        // Calcula tempo
+        unsigned long tempoAtualMs = millis() - tempoInicio - tempoTotalPausado;
+        float segundos = tempoAtualMs / 1000.0;
+
+        char movAtual = sequencia[indice];
+        char movProximo = ' '; // Vazio por padrão
+        
+        bool executouDuplo = false;
+
+        // Verifica se existe um próximo movimento e se é otimizável
+        if (indice < sequencia.length() - 1) {
+            movProximo = sequencia[indice + 1];
+            
+            // LÓGICA DE OTIMIZAÇÃO: Verifica se são opostos
+            if (saoOpostos(movAtual, movProximo)) {
+                
+                // MANTÉM O NÚMERO DOS MOVIMENTOS
+                Serial.print("[Tempo: "); Serial.print(segundos); Serial.print("s] ");
+                Serial.print("Mov "); Serial.print(indice + 1); Serial.print(" & "); Serial.print(indice + 2);
+                Serial.print(" ("); Serial.print(movAtual); Serial.print(" & "); Serial.print(movProximo); Serial.println(")");
+                
+                RaidenExecutarDuplo(movAtual, movProximo);
+                indice += 2; // Pula 2 índices
+                executouDuplo = true;
+            }
+        }
+
+        // Se não foi possível fazer o movimento duplo, faz o simples
+        if (!executouDuplo) {
+            // MANTÉM O NÚMERO DO MOVIMENTO
+            Serial.print("[Tempo: "); Serial.print(segundos); Serial.print("s] ");
+            Serial.print("Mov "); Serial.print(indice + 1);
+            Serial.print(" ("); Serial.print(movAtual); Serial.println(")");
+            
+            RaidenExecutarSimples(movAtual);
+            indice++; // Pula 1 índice
+        }
+
+        delay(0); 
+    }
+
+    // 4. FINALIZAÇÃO
+    else {
+        unsigned long tempoFinalReal = millis() - tempoInicio - tempoTotalPausado;
+        Serial.println("\n===== SEQUENCIA CONCLUIDA =====");
+        Serial.print("Tempo Total: ");
+        Serial.print(tempoFinalReal / 1000.0);
+        Serial.println(" segundos.");
+        
+        start = false;
+        Serial.println("Envie 'R' para rodar novamente.");
+
+        while (true) {
+            if (Serial.available() > 0) {
+                char c = Serial.read();
+                if (c == 'R' || c == 'r') {
+                    while(Serial.available() > 0) Serial.read();
+                    Serial.println("Reiniciando...");
+                    start = true;
+                    tempoInicio = millis();
+                    tempoTotalPausado = 0;
+                    indice = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
+#endif

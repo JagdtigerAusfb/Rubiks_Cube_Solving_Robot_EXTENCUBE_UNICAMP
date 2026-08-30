@@ -1,0 +1,116 @@
+/**********************************************************************************/
+/*********************Oficina - Rôbo Cubo Mágico - Motores*************************/
+/***************Pedro Ortolan - Guilherme Ramalho - Paulo Ségio********************/
+/******************************2º Semestre 2025************************************/
+/************************************1/2*******************************************/
+/**********************************************************************************/
+
+/*O objetivo desse código é rodar um motor de passo NEMA17 utilizando um driver A4988*/
+
+/*Usamos a serial do arduino para variar a velocidade do motor, mas isso poderia ser 
+feito manualmente alterando o valor do último delay e reescrevendo o programa na placa.
+Ou seja, essa parte não é necessária para girar o motor.*/
+
+/*
+************Caracteristícas do driver A4988***************************************
+
+(Pinos com / na frente são ativados em nível lógico baixo)
+
+Pinos que operam em baixo por padrão possuem os chamados resistores de pull-down internamente. Esse resistor apenas conecta 
+aquele pino a um terra internamente e, assim, o pino permanece em valor baixo por padrão.
+
+Pinos que operam em alto por padrão possuem os chamados resistores de pull-up internamente. Esse resistor apenas conecta 
+aquele pino a um +Vcc de 5V internamente e, assim, o pino permanece em valor alto por padrão.
+
+-> Pino de /SLEEP ativado em high por default, pino /RESET floating --> ligar o /SLEEP no /RESET para manter ambos desligados;
+-> Pinos de MICROSTEP em baixo por padrão, deixar sem nada resulta em full step;
+-> /ENABLE em high por padrão
+
+-> Para acionar o motor, devemos controlar dois pinos do driver A4988: o de STEP e de Direção
+
+-> O pino de STEP faz o motor girar um passo cada vez que seu valor transita de 0 para 1 (sensível a borda de subida)
+
+-> O pino de direção define a direção do motor, com HIGH sendo para um lado, e LOW para o outro. Para saber qual lado
+é qual, teste no motor e veja para qual lado ele roda em cada caso.
+
+*/
+
+//Código em si:
+/***************************************************************************************************************************/
+
+/*A primeira coisa que fazemos no código é a declaração das variávies usadas*/
+
+/*Essas duas variáveis recebem os valores dos pinos de Direção e STEP usadas fisicamente no arduino.
+Note que podemos usar diretamente os valores dos pinos nas funções, mas para alterar todos de uma vez,
+caso seja necessário alterar o pino usado, definir uma variável deixa isso mais fácil.*/
+int DIR_PIN = 2; 
+int STEP_PIN = 3;
+
+//Essas variáveis são usadas na sérial, ignore
+int novoValor = 0;
+int valorAtual = 1000;
+
+/*Função setup (roda apenas uma vez na inicialização do programa)*/
+void setup() {
+
+  /*pinMode define o respectivo pin como entrada (INPUT) ou
+  saída (OUTPOT). É importante que isso seja feito para a porta
+  operar de fato no modo que queremos.*/
+  pinMode(STEP_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+
+  /*O LED_BUILDIN é o led incorporado ao arduino e pode ser controlado
+  setando seu pino como output (podemos usar seu nome diretamente no lugar 
+  do valor do pino)*/
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  /*A função de digitalWrite define um pino de saída como LOW ou HIGH
+  No nosso caso, define a direção de rotação do motor alterando o valor
+  do pino de direção (troque HIGH/LOW para inverter)*/
+  digitalWrite(DIR_PIN, HIGH);     
+
+  /*ignore se não estiver usando a serial*/
+  /*Para usar a serial, precisamos primeiro definir a taxa de trasmissão de bits que
+  será usada por ambos o transmissor e pelo receptor, tal que estes estejam sincronizados.
+  Essa função define então a taxa, conhecida como Baud Rate, para 9600 bits por segundo*/
+  Serial.begin(9600);
+
+  Serial.println("Insira um número para definir a velocidade do motor.");
+  Serial.println("Por padrão é 1000 milisegundos.");
+  Serial.println("Note que o valor só não é atualizado entre os passos, então se um valor muito alto for colocado teremos que esperar esse tempo até ele atualizar. Só reinicie a simulação se isso acontecer.");
+  
+}
+
+
+/*A função loop roda, em loop, eternamente enquanto o dispositivo estiver ligado*/
+void loop() {
+
+  /*Usando um motor de 1.8º por passo, se queremos que o motor gire 90º graus, fazemos 90/1.8 = 50 passos.
+  Assim, fazemos um loop que aciona o pino de STEP 50 vezes*/
+
+  for (int i = 0; i < 50; i++) // gera 50 pulsos de step (1.8 * 50 = 90)
+    {
+    digitalWrite(STEP_PIN, HIGH);           // Liga o motor ao setar o pin de step como high, cada setamento desse pino faz passar um passo
+    digitalWrite(LED_BUILTIN, HIGH);        // Liga o led do arduino para indicar que passou um passo
+    delayMicroseconds(1000);                // Espera T ms entre os passos (esse valor depende do torque do motor)
+    digitalWrite(STEP_PIN, LOW);            // seta pin como low para mandar o próximo passo ao escrever high de novo no proximo loop
+    digitalWrite(LED_BUILTIN, LOW);         // Desliga o led 
+    delayMicroseconds(1000);                // Espera mais Tms (na prática espera 2 x Ts entre passos)
+    }
+
+    /*Essa parte é da serial, ignore*/
+    if (Serial.available() > 0) {
+    int novoValor = Serial.parseInt();   // tenta ler inteiro
+    if (novoValor != 0) {                // só atualiza se realmente recebeu algo
+      valorAtual = novoValor;
+      Serial.print("Novo valor recebido: ");
+      Serial.println(valorAtual);
+    }
+  }
+
+/*O valor entre os passos de 90º pode ser aumentado enviando um número
+para a serial, default é 1000 e mínimo é 1. Note que o valor só não é atualizado entre
+os passos, então se um valor muito alto for colocado teremos que esperar esse tempo
+até ele atualizar. */
+delay(valorAtual);
+}

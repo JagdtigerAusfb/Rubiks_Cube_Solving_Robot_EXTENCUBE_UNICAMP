@@ -1,0 +1,120 @@
+﻿#include <Wire.h>
+#include "TCS34725.h"
+
+
+#define LED_PIN 7
+#define INTERVALO_LEITURA 1000  // tempo entre leituras (ms)
+
+
+TCS34725 tcs;
+
+
+struct CorRef {
+  char nome;
+  float r, g, b;
+};
+
+
+CorRef referencias[6] = {
+  {'O', 64.28,  5.10,  2.32},
+  {'Y', 31.99, 17.98,  2.89},
+  {'R', 71.11,  4.56,  4.56},
+  {'W', 19.77, 15.45,  7.75},
+  {'G',  8.35, 34.70,  6.46},
+  {'B',  5.28, 16.36, 24.84}
+};
+
+
+char classificarCor(float r, float g, float b) {
+  float menorDist = 1e9;
+  char melhor = '?';
+
+
+  for (int i = 0; i < 6; i++) {
+    float dr = r - referencias[i].r;
+    float dg = g - referencias[i].g;
+    float db = b - referencias[i].b;
+    float dist = dr*dr + dg*dg + db*db;
+
+
+    if (dist < menorDist) {
+      menorDist = dist;
+      melhor = referencias[i].nome;
+    }
+  }
+  return melhor;
+}
+
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+
+  if (!tcs.attach(Wire)) {
+    Serial.println("ERRO: TCS34725 nao encontrado!");
+    while (1);
+  }
+
+
+  tcs.integrationTime(50);               // ms
+  tcs.gain(TCS34725::Gain::X04);
+
+
+  Serial.println("Sistema pronto");
+}
+
+
+void loop() {
+  static unsigned long ultimoCiclo = 0;
+  static bool aguardandoLeitura = false;
+  static unsigned long inicioIntegracao = 0;
+
+
+  unsigned long agora = millis();
+
+
+  // Espera intervalo entre leituras
+  if (!aguardandoLeitura && (agora - ultimoCiclo >= INTERVALO_LEITURA)) {
+    digitalWrite(LED_PIN, HIGH);          // Liga LED
+    inicioIntegracao = agora;
+    aguardandoLeitura = true;
+  }
+
+
+  // Espera tempo de integração
+  if (aguardandoLeitura && (agora - inicioIntegracao >= 60)) {
+
+
+    if (tcs.available()) {
+      TCS34725::Color cor = tcs.color();
+
+
+      digitalWrite(LED_PIN, LOW);        // Desliga LED
+      aguardandoLeitura = false;
+      ultimoCiclo = agora;               // Marca fim da leitura
+
+
+      float r = cor.r;
+      float g = cor.g;
+      float b = cor.b;
+
+
+      Serial.print("R="); Serial.print(r, 2);
+      Serial.print(" G="); Serial.print(g, 2);
+      Serial.print(" B="); Serial.println(b, 2);
+
+
+      char detectada = classificarCor(r, g, b);
+
+
+      Serial.print("Cor detectada: ");
+      Serial.println(detectada);
+      Serial.println("--------------------");
+    }
+  }
+}

@@ -1,0 +1,103 @@
+int leds = 0;
+
+int amostras = 0;
+int valor_ldr = 0;
+int red = 0;
+int blue = 0;
+int green = 0;
+int ref_red = 0;
+int ref_blue = 0;
+int ref_green = 0;
+
+int counter;
+
+void setup()
+{
+  pinMode(10, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(A0, INPUT);
+  Serial.begin(9600);
+
+  leds = 0;
+  red = 0;
+  blue = 0;
+  green = 0;
+  valor_ldr = 0;
+  amostras = 0;
+  ref_red = 585;
+  ref_green = 585;
+  ref_blue = 585;
+}
+
+void loop()
+{
+  leds = 0;
+  for (counter = 0; counter < 3; ++counter) {
+    // Pisca LED
+    leds += 1;
+    if (leds == 1) {
+      digitalWrite(10, HIGH);
+    }
+    if (leds == 2) {
+      digitalWrite(9, HIGH);
+    }
+    if (leds == 3) {
+      digitalWrite(8, HIGH);
+    }
+    delay(100); // Wait for 100 millisecond(s)
+    // Leitura do LDR
+    while (amostras < 10) {
+      valor_ldr += analogRead(A0);
+      amostras += 1;
+      delay(10); // Wait for 10 millisecond(s)
+    }
+    if (leds == 1) {
+      digitalWrite(10, LOW);
+      red = (valor_ldr / 10);
+      Serial.print("Canal vermelho: ");
+      Serial.println(red);
+    }
+    if (leds == 2) {
+      digitalWrite(9, LOW);
+      blue = (valor_ldr / 10);
+      Serial.print("Canal azul: ");
+      Serial.println(blue);
+    }
+    if (leds == 3) {
+      digitalWrite(8, LOW);
+      green = (valor_ldr / 10);
+      Serial.print("Canal verde: ");
+      Serial.println(green);
+    }
+    delay(100); // Wait for 100 millisecond(s)
+    amostras = 0;
+    valor_ldr = 0;
+  }
+  delay(100); // Wait for 100 millisecond(s)
+  // Determinação da cor
+  if (red - ref_red > 0 && (green - ref_green < 0 && blue - ref_blue < 0)) {
+    Serial.println("O objeto e da cor vermelha");
+  }
+  if (red - ref_red < 0 && (green - ref_green > 0 && blue - ref_blue < 0)) {
+    Serial.println("O objeto e da cor verde");
+  }
+  if (red - ref_red < 0 && (green - ref_green < 0 && blue - ref_blue > 0)) {
+    Serial.println("O objeto e da cor azul");
+  }
+  if (red - ref_red > 0 && (green - ref_green > 0 && blue - ref_blue > 0)) {
+    Serial.println("O objeto e da cor branca");
+  }
+  if (red - ref_red > 0 && (green - ref_green < 0 && blue - ref_blue > 0)) {
+    Serial.println("O objeto e da cor Rosa");
+  }
+  if (red - ref_red < 0 && (green - ref_green > 0 && blue - ref_blue > 0)) {
+    Serial.println("O objeto e da cor Ciano");
+  }
+  if (red - ref_red > 0 && (green - ref_green > 0 && blue - ref_blue < 0)) {
+    Serial.println("O objeto e da cor Amarelo");
+  }
+  if (red - ref_red < 0 && (green - ref_green < 0 && blue - ref_blue < 0)) {
+    Serial.println("O objeto e da cor preta");
+  }
+}

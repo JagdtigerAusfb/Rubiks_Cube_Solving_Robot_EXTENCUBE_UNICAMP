@@ -1,0 +1,144 @@
+﻿#include <Wire.h>
+#include "TCS34725.h"
+
+
+TCS34725 tcs;
+
+
+#define LED_PIN 7
+#define INTERVALO 60
+
+
+unsigned long ultimoTempo = 0;
+
+
+// ======== HUE CALIBRADO ========
+float H_RED = 1.88;
+float H_ORANGE = 7;
+float H_YELLOW = 60;
+float H_WHITE = 101;
+float H_GREEN = 128;
+float H_BLUE = 199;
+
+
+// ================= RGB -> HSV
+void rgbToHsv(float r, float g, float b, float &h, float &s, float &v) {
+  float maxc = max(r, max(g, b));
+  float minc = min(r, min(g, b));
+  float delta = maxc - minc;
+
+
+  v = maxc;
+  if (maxc == 0) { s = 0; h = 0; return; }
+  s = delta / maxc;
+
+
+  if (delta == 0) h = 0;
+  else if (maxc == r) h = 60.0 * fmod(((g - b) / delta), 6);
+  else if (maxc == g) h = 60.0 * (((b - r) / delta) + 2);
+  else h = 60.0 * (((r - g) / delta) + 4);
+
+
+  if (h < 0) h += 360.0;
+}
+
+
+// Distância angular entre dois HUEs
+float distHue(float h1, float h2) {
+  float d = abs(h1 - h2);
+  return min(d, 360 - d);
+}
+
+
+// ================= CLASSIFICAÇÃO
+char classificarCor(uint16_t r, uint16_t g, uint16_t b) {
+
+
+  float rf = r, gf = g, bf = b;
+  float soma = rf + gf + bf;
+  if (soma < 5) return 'X';  // leitura inválida
+
+
+  rf /= soma;
+  gf /= soma;
+  bf /= soma;
+
+
+  float h, s, v;
+  rgbToHsv(rf, gf, bf, h, s, v);
+
+
+  // Muito dessaturado = provavelmente erro de leitura
+  if (s < 0.05) return 'X';
+
+
+  float dRed    = distHue(h, H_RED);
+  float dOrange = distHue(h, H_ORANGE);
+  float dYellow = distHue(h, H_YELLOW);
+  float dWhite  = distHue(h, H_WHITE);
+  float dGreen  = distHue(h, H_GREEN);
+  float dBlue   = distHue(h, H_BLUE);
+
+
+  float menor = dRed;
+  char cor = 'R';
+
+
+  if (dOrange < menor) { menor = dOrange; cor = 'O'; }
+  if (dYellow < menor) { menor = dYellow; cor = 'Y'; }
+  if (dWhite  < menor) { menor = dWhite;  cor = 'W'; }
+  if (dGreen  < menor) { menor = dGreen;  cor = 'G'; }
+  if (dBlue   < menor) { menor = dBlue;   cor = 'B'; }
+
+
+  return cor;
+}
+
+
+
+
+// ================= LEITURA SENSOR
+char lerCorSensor() {
+  while (!tcs.available());
+  auto c = tcs.color();
+  return classificarCor(c.r, c.g, c.b);
+}
+
+
+// ================= SETUP
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
+
+
+  if (!tcs.attach(Wire)) {
+    Serial.println("Sensor nao encontrado");
+    while (1);
+  }
+
+
+  tcs.integrationTime(33);
+  tcs.gain(TCS34725::Gain::X01);
+
+
+  Serial.println("Deteccao calibrada pronta");
+}
+
+
+// ================= LOOP TESTE
+void loop() {
+  if (millis() - ultimoTempo >= INTERVALO) {
+    ultimoTempo = millis();
+
+
+    char cor = lerCorSensor();
+
+
+    Serial.print("Cor detectada: ");
+    Serial.println(cor);
+  }
+}
