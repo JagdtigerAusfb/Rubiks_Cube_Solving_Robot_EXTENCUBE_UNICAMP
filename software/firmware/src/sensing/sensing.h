@@ -13,8 +13,15 @@
 #define MUX_SEL_2 9
 #define MUX_SEL_3 8
 
-#define LED_PIN         7             // liga/desliga o conjunto de LEDs (sem seleção individual)
-#define SENSE_SETTLE_MS 60            // acomodação após trocar canal (~1 integração)
+// LEDs individuais — UM GPIO por sensor, indexado por CANAL FÍSICO do mux
+// (o LED fica no mesmo módulo TCS34725 que o SDA daquele canal).
+extern const uint8_t LED_GPIO[NUM_SENSORS];
+
+void ledOn(uint8_t ns);      // acende o LED do sensor lógico ns
+void ledOff(uint8_t ns);     // apaga o LED do sensor lógico ns
+void ledAllOff();            // apaga todos
+
+#define SENSE_SETTLE_MS 50            // acomodação após trocar canal (~1 integração)
 
 // Indireção NS lógico (2*face+pos, ordem de contrato) -> canal físico do mux.
 extern const uint8_t MUX_CHANNEL[NUM_SENSORS];
@@ -43,6 +50,9 @@ uint8_t sensingScan(bool status[NUM_SENSORS]);
 void detectColorLoadDefaults();               // placeholder de globalRef (pré-calibração)
 bool senseHsv(uint8_t ns, Hsv &out);          // leitura crua: mux+read+rgb->hsv; false se inválida
 char detectColorLogical(uint8_t ns);          // senseHsv + classificação -> W/R/G/Y/O/B/X
+// Igual ao detectColorLogical, mas devolve também a razão R/O do adesivo
+// (usada pela resolução por peça no sense_complete).
+char detectColorLogicalRO(uint8_t ns, float &ratio);
 bool senseRaw(uint8_t ns, float &r, float &g, float &b);   // leitura CRUA (sem balanço)
 
 // ---- Calibração ----

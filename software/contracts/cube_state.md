@@ -28,6 +28,7 @@ Alfabeto de cor (Tab. C.2):
 &#x20;   U(branca)  R  F(verde)  D  L  B      ==  U R F D L B
 
 
+
 Convenção física do robô: face branca sempre para cima, face verde sempre
 à frente (motor designado como frente).
 
@@ -39,8 +40,9 @@ Sentido horário, começando pela peça superior esquerda, 8 posições
 ## Indexação
 
 &#x20;   índice do adesivo = face \* 8 + posição      (0..47)
-    face ∈ {0..5} na ordem URFDLB acima
-    posição ∈ {0..7} na ordem horária acima
+face ∈ {0..5} na ordem URFDLB acima
+posição ∈ {0..7} na ordem horária acima
+
 
 
 ## Centros
@@ -49,5 +51,5 @@ Implícitos/fixos por convenção (não são sensoriados). O adapter do
 `solver/` reconstrói os 54 facelets inserindo os 6 centros conhecidos e
 reordenando cada face para o formato exigido pela biblioteca de solução.
 
-`firmware/src/protocol/cube\_state.h` espelha este schema.
+`firmware/src/protocol/cube\\\\\\\_state.h` espelha este schema.
 

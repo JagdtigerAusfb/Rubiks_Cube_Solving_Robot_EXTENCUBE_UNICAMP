@@ -41,7 +41,8 @@ int calibrateSolved() {
     float minChroma = globalRef[1].s;
     for (uint8_t c = 2; c < NUM_COLORS; c++)
         if (globalRef[c].s < minChroma) minChroma = globalRef[c].s;
-    whiteSatThresh = 0.5f * (globalRef[0].s + minChroma);
+    whiteSatThresh = 0.5f * (globalRef[0].s + minChroma); // Cálculo automático da saturação do branco
+    //whiteSatThresh = 0.20f;
 
     // --- Auto-validação das premissas (ver sensor_map.md) ---
     // (1) branco deve ser o menos saturado, com folga sobre o menor cromático.

@@ -5,11 +5,14 @@ O byte enviado na serial é o caractere ASCII 'A'..'R' — 1 byte por
 movimento, para máxima velocidade de comunicação.
 
 ## Onde a tradução acontece (toda no HOST)
-    solver resolve -> notação de cubo (U, U', U2, ...)
-      -> host/solver/base.py traduz para o char 'A'..'R' (to_robot_sequence)
-      -> firmware recebe SÓ o char e o mapeia na LUT (índice 0..17)
 
-MOVE_TABLE em host/solver/base.py é o espelho desta tabela no host.
+&#x20;   solver resolve -> notação de cubo (U, U', U2, ...)
+-> host/solver/base.py traduz para o char 'A'..'R' (to\_robot\_sequence)
+-> firmware recebe SÓ o char e o mapeia na LUT (índice 0..17)
+
+
+
+MOVE\_TABLE em host/solver/base.py é o espelho desta tabela no host.
 (embedded.py NÃO traduz — apenas valida que os chars estão em A..R.)
 
 O firmware nunca vê a notação de cubo mágico, apenas a letra.
